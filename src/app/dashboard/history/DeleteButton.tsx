@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@/lib/supbase/client";
+import { createClient } from "@/src/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 export default function DeleteButton({ id }: { id: string }) {
