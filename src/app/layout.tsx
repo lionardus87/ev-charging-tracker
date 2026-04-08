@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/src/context/AuthContext";
 
 export const metadata: Metadata = {
 	title: "EV Charging Tracker",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="en">
-			<body className="bg-gray-50 min-h-screen">{children}</body>
+			<body className="bg-gray-50 min-h-screen">
+				<AuthProvider>{children}</AuthProvider>
+			</body>
 		</html>
 	);
 }

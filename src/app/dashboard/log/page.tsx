@@ -1,19 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/src/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/src/context/AuthContext";
+import { createSession } from "@/src/lib/api";
+import { CreateSessionPayload, LocationType } from "@/src/types";
 
 export default function LogSessionPage() {
 	const router = useRouter();
-	const supabase = createClient();
+	const { user } = useAuth();
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 
 	const [form, setForm] = useState({
 		date: new Date().toISOString().split("T")[0],
-		location_type: "home",
+		location_type: "home" as LocationType,
 		start_percent: "",
 		end_percent: "",
 		kwh_added: "",
@@ -34,45 +36,30 @@ export default function LogSessionPage() {
 
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
-		setLoading(true);
-		setError("");
-
-		const {
-			data: { user },
-		} = await supabase.auth.getUser();
 		if (!user) {
 			router.push("/login");
 			return;
 		}
+		setLoading(true);
+		setError("");
 
-		const startPct = parseFloat(form.start_percent);
-		const endPct = parseFloat(form.end_percent);
-		const kwh = parseFloat(form.kwh_added);
-		const cost = parseFloat(form.cost);
-		const rate = parseFloat(form.rate_per_kwh);
-
-		let finalRate = isNaN(rate) ? null : rate;
-		let finalCost = isNaN(cost) ? null : cost;
-
-		if (finalCost && kwh && !finalRate) finalRate = finalCost / kwh;
-		if (finalRate && kwh && !finalCost) finalCost = finalRate * kwh;
-
-		const { error } = await supabase.from("charging_sessions").insert({
-			user_id: user.id,
+		const payload: CreateSessionPayload = {
 			date: form.date,
 			location_type: form.location_type,
-			start_percent: isNaN(startPct) ? null : startPct,
-			end_percent: isNaN(endPct) ? null : endPct,
-			kwh_added: kwh,
+			start_percent: form.start_percent ? parseFloat(form.start_percent) : null,
+			end_percent: form.end_percent ? parseFloat(form.end_percent) : null,
+			kwh_added: parseFloat(form.kwh_added),
 			odometer_start: form.odometer_start ? parseFloat(form.odometer_start) : null,
 			odometer_end: form.odometer_end ? parseFloat(form.odometer_end) : null,
-			cost: finalCost,
-			rate_per_kwh: finalRate,
+			cost: form.cost ? parseFloat(form.cost) : null,
+			rate_per_kwh: form.rate_per_kwh ? parseFloat(form.rate_per_kwh) : null,
 			notes: form.notes || null,
-		});
+		};
+
+		const { error } = await createSession(payload);
 
 		if (error) {
-			setError(error.message);
+			setError(error);
 			setLoading(false);
 		} else {
 			router.push("/dashboard");
