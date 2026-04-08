@@ -30,17 +30,21 @@ export default function LoginPage() {
 	}
 
 	return (
-		<div className="min-h-screen flex items-center justify-center px-4">
+		<div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4">
 			<div className="w-full max-w-md">
 				<div className="text-center mb-8">
-					<h1 className="text-3xl font-bold text-gray-900">⚡ EV Tracker</h1>
-					<p className="text-gray-500 mt-2">Sign in to your account</p>
+					<h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+						⚡ EV Tracker
+					</h1>
+					<p className="text-gray-500 dark:text-gray-400 mt-2">
+						Sign in to your account
+					</p>
 				</div>
 
-				<div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+				<div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-8">
 					<form onSubmit={handleLogin} className="space-y-5">
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">
+							<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
 								Email
 							</label>
 							<input
@@ -48,13 +52,13 @@ export default function LoginPage() {
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
 								required
-								className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+								className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
 								placeholder="you@example.com"
 							/>
 						</div>
 
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">
+							<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
 								Password
 							</label>
 							<input
@@ -62,7 +66,7 @@ export default function LoginPage() {
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
 								required
-								className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+								className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
 								placeholder="••••••••"
 							/>
 						</div>
@@ -78,7 +82,7 @@ export default function LoginPage() {
 						</button>
 					</form>
 
-					<p className="text-center text-sm text-gray-500 mt-6">
+					<p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
 						Don&apos;t have an account?{" "}
 						<Link
 							href="/signup"
