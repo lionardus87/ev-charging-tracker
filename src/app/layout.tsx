@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AuthProvider } from "@/src/context/AuthContext";
-import { ThemeProvider } from "@/src/context/ThemeContext";
+import { AuthProvider } from "@/src/client/context/AuthContext";
+import { ThemeProvider } from "@/src/client/context/ThemeContext";
 
 export const metadata: Metadata = {
 	title: "EV Charging Tracker",

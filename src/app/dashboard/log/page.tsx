@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/src/context/AuthContext";
+import { useAuth } from "@/src/client/context/AuthContext";
 import { createSession } from "@/src/lib/api";
 import { CreateSessionPayload, LocationType } from "@/src/types";
 

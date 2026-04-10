@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getSessions, deleteSession } from "@/src/lib/api";
-import { ChargingSession } from "@/src/types";
+import { useSessions } from "@/src/client/hooks/useSessions";
 
 const locationLabel: Record<string, string> = {
 	home: "🏠 Home",
@@ -12,24 +10,7 @@ const locationLabel: Record<string, string> = {
 };
 
 export default function HistoryClient() {
-	const [sessions, setSessions] = useState<ChargingSession[]>([]);
-	const [loading, setLoading] = useState(true);
-
-	useEffect(() => {
-		async function load() {
-			const { data, error } = await getSessions();
-			if (error || !data) return;
-			setSessions(data);
-			setLoading(false);
-		}
-		load();
-	}, []);
-
-	async function handleDelete(id: string) {
-		if (!confirm("Delete this session?")) return;
-		const { error } = await deleteSession(id);
-		if (!error) setSessions((prev) => prev.filter((s) => s.id !== id));
-	}
+	const { sessions, loading, handleDelete } = useSessions();
 
 	if (loading) {
 		return (

@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/src/context/AuthContext";
-import { getSessions, calculateStats } from "@/src/lib/api";
-import { ChargingSession, SessionStats } from "@/src/types";
-import ThemeToggle from "@/src/components/ThemeToggle";
+import { useAuth } from "@/src/client/context/AuthContext";
+import { useSessions } from "@/src/client/hooks/useSessions";
+import ThemeToggle from "@/src/client/components/ThemeToggle";
 
 const locationLabel: Record<string, string> = {
 	home: "🏠 Home",
@@ -15,20 +13,7 @@ const locationLabel: Record<string, string> = {
 
 export default function DashboardClient() {
 	const { user, signOut } = useAuth();
-	const [sessions, setSessions] = useState<ChargingSession[]>([]);
-	const [stats, setStats] = useState<SessionStats | null>(null);
-	const [loading, setLoading] = useState(true);
-
-	useEffect(() => {
-		async function load() {
-			const { data, error } = await getSessions();
-			if (error || !data) return;
-			setSessions(data);
-			setStats(calculateStats(data));
-			setLoading(false);
-		}
-		load();
-	}, []);
+	const { sessions, stats, loading } = useSessions();
 
 	if (loading) {
 		return (
