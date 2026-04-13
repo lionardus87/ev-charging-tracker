@@ -5,10 +5,10 @@ import { useAuth } from "@/src/client/context/AuthContext";
 import { useSessions } from "@/src/client/hooks/useSessions";
 import ThemeToggle from "@/src/client/components/ThemeToggle";
 
-const locationLabel: Record<string, string> = {
-	home: "🏠 Home",
-	public: "🔌 Public AC",
-	fast: "⚡ DC Fast",
+const speedLabel: Record<string, string> = {
+	slow: "🐢 Slow",
+	regular: "⚡ Regular",
+	fast: "🚀 Fast",
 };
 
 export default function DashboardClient() {
@@ -64,7 +64,7 @@ export default function DashboardClient() {
 						{ label: "Total sessions", value: stats?.totalSessions ?? 0, sub: null },
 						{
 							label: "Total energy",
-							value: stats?.totalKwh.toFixed(1) ?? 0,
+							value: stats?.totalKwh.toFixed(2) ?? 0,
 							sub: "kWh",
 						},
 						{
@@ -159,10 +159,21 @@ export default function DashboardClient() {
 										<p className="text-sm font-medium text-gray-900 dark:text-white">
 											{session.date}
 										</p>
-										<p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-											{locationLabel[session.location_type]} ·{" "}
-											{session.kwh_added.toFixed(1)} kWh
-										</p>
+										<div className="flex items-center gap-2 mt-0.5">
+											{session.provider && (
+												<p className="text-xs text-gray-500 dark:text-gray-400">
+													{session.provider}
+												</p>
+											)}
+											{session.charging_speed && (
+												<p className="text-xs text-gray-400 dark:text-gray-500">
+													· {speedLabel[session.charging_speed]}
+												</p>
+											)}
+											<p className="text-xs text-gray-500 dark:text-gray-400">
+												· {session.kwh_added.toFixed(2)} kWh
+											</p>
+										</div>
 									</div>
 									<div className="text-right">
 										<p className="text-sm font-medium text-gray-900 dark:text-white">

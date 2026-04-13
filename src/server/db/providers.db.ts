@@ -1,28 +1,32 @@
 import { createClient } from "@/src/lib/supabase/server";
-import { CreateSessionPayload, ChargingSession } from "@/src/types";
 
-export async function dbGetSessions(
-	userId: string,
-): Promise<ChargingSession[]> {
+export interface Provider {
+	id: string;
+	user_id: string;
+	name: string;
+	created_at: string;
+}
+
+export async function dbGetProviders(userId: string): Promise<Provider[]> {
 	const supabase = await createClient();
 	const { data, error } = await supabase
-		.from("charging_sessions")
+		.from("providers")
 		.select("*")
 		.eq("user_id", userId)
-		.order("date", { ascending: false });
+		.order("name", { ascending: true });
 
 	if (error) throw new Error(error.message);
 	return data ?? [];
 }
 
-export async function dbCreateSession(
+export async function dbCreateProvider(
 	userId: string,
-	payload: CreateSessionPayload & { charging_speed: string | null },
-): Promise<ChargingSession> {
+	name: string,
+): Promise<Provider> {
 	const supabase = await createClient();
 	const { data, error } = await supabase
-		.from("charging_sessions")
-		.insert({ ...payload, user_id: userId })
+		.from("providers")
+		.insert({ user_id: userId, name })
 		.select()
 		.single();
 
@@ -30,13 +34,13 @@ export async function dbCreateSession(
 	return data;
 }
 
-export async function dbDeleteSession(
+export async function dbDeleteProvider(
 	userId: string,
 	id: string,
 ): Promise<void> {
 	const supabase = await createClient();
 	const { error } = await supabase
-		.from("charging_sessions")
+		.from("providers")
 		.delete()
 		.eq("id", id)
 		.eq("user_id", userId);

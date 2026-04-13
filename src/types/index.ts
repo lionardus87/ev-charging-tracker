@@ -1,4 +1,4 @@
-export type LocationType = "home" | "public" | "fast";
+export type ChargingSpeed = "slow" | "regular" | "fast";
 
 export interface User {
 	id: string;
@@ -8,27 +8,29 @@ export interface User {
 export interface ChargingSession {
 	id: string;
 	user_id: string;
+	vehicle_id: string | null;
 	date: string;
-	location_type: LocationType;
+	provider: string | null;
 	start_percent: number | null;
 	end_percent: number | null;
 	kwh_added: number;
-	odometer_start: number | null;
-	odometer_end: number | null;
+	duration_minutes: number | null;
+	odometer: number | null;
 	cost: number | null;
 	rate_per_kwh: number | null;
+	charging_speed: ChargingSpeed | null;
 	notes: string | null;
 	created_at: string;
 }
 
 export interface CreateSessionPayload {
 	date: string;
-	location_type: LocationType;
+	provider: string | null;
 	start_percent: number | null;
 	end_percent: number | null;
 	kwh_added: number;
-	odometer_start: number | null;
-	odometer_end: number | null;
+	duration_minutes: number | null;
+	odometer: number | null;
 	cost: number | null;
 	rate_per_kwh: number | null;
 	notes: string | null;

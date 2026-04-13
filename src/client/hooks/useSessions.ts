@@ -30,5 +30,5 @@ export function useSessions() {
 		if (!error) setSessions((prev) => prev.filter((s) => s.id !== id));
 	}
 
-	return { sessions, stats, loading, error, handleDelete };
+	return { sessions, setSessions, stats, loading, error, handleDelete };
 }
