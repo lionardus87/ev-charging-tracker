@@ -6,11 +6,12 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { useProviders } from "@/src/client/hooks/useProviders";
 import { updateSession } from "@/src/lib/api";
-import { ChargingSession, CreateSessionPayload } from "@/src/types";
+import { ChargingSession, ChargingSpeed, CreateSessionPayload } from "@/src/types";
 
 type FormValues = {
 	date: string;
 	provider: string;
+	charging_speed: string;
 	start_percent: string;
 	end_percent: string;
 	kwh_added: string;
@@ -43,6 +44,7 @@ export default function EditSessionClient({
 		defaultValues: {
 			date: session.date,
 			provider: session.provider ?? "",
+			charging_speed: session.charging_speed ?? "",
 			start_percent: session.start_percent?.toString() ?? "",
 			end_percent: session.end_percent?.toString() ?? "",
 			kwh_added: session.kwh_added?.toString() ?? "",
@@ -73,14 +75,11 @@ export default function EditSessionClient({
 		const payload: CreateSessionPayload = {
 			date: values.date,
 			provider: values.provider || null,
-			start_percent: values.start_percent
-				? parseFloat(values.start_percent)
-				: null,
+			charging_speed: (values.charging_speed as ChargingSpeed) || null,
+			start_percent: values.start_percent ? parseFloat(values.start_percent) : null,
 			end_percent: values.end_percent ? parseFloat(values.end_percent) : null,
 			kwh_added: parseFloat(values.kwh_added),
-			duration_minutes: values.duration_minutes
-				? parseFloat(values.duration_minutes)
-				: null,
+			duration_minutes: values.duration_minutes ? parseFloat(values.duration_minutes) : null,
 			odometer: values.odometer ? parseFloat(values.odometer) : null,
 			cost: values.cost ? parseFloat(values.cost) : null,
 			rate_per_kwh: values.rate_per_kwh ? parseFloat(values.rate_per_kwh) : null,
@@ -99,27 +98,22 @@ export default function EditSessionClient({
 	}
 
 	const inputClass =
-		"w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500";
+		"w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition";
 	const errorClass = "text-red-500 text-xs mt-1";
 
 	return (
-		<div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-			<nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center gap-4">
-				<Link
-					href="/dashboard/history"
-					className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm"
-				>
-					← Back
-				</Link>
-				<h1 className="text-xl font-bold text-gray-900 dark:text-white">
-					Edit session
-				</h1>
-			</nav>
-
+		<div>
 			<main className="max-w-2xl mx-auto px-4 py-8">
+				<div className="mb-6 animate-fade-in">
+					<Link href="/dashboard/history" className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">
+						← Back to sessions
+					</Link>
+					<h2 className="text-xl font-bold text-gray-900 dark:text-white mt-2">Edit session</h2>
+				</div>
+
 				<form
 					onSubmit={handleSubmit(onSubmit)}
-					className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 space-y-6"
+					className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 space-y-6 animate-scale-in"
 				>
 					<div className="grid grid-cols-2 gap-4">
 						<div>
@@ -143,9 +137,7 @@ export default function EditSessionClient({
 								<select {...register("provider")} className={inputClass}>
 									<option value="">Select provider</option>
 									{providers.map((p) => (
-										<option key={p.id} value={p.name}>
-											{p.name}
-										</option>
+										<option key={p.id} value={p.name}>{p.name}</option>
 									))}
 								</select>
 							)}
@@ -181,15 +173,34 @@ export default function EditSessionClient({
 						</div>
 					</div>
 
+					{/* charging speed */}
 					<div>
-						<p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-							Battery
-						</p>
+						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+							Charging speed
+						</label>
+						<div className="grid grid-cols-3 gap-3">
+							{[
+								{ value: "slow",    label: "🐢 Slow",    sub: "AC / Level 1-2" },
+								{ value: "regular", label: "⚡ Regular", sub: "AC / Level 2" },
+								{ value: "fast",    label: "🚀 Fast",    sub: "DC fast charge" },
+							].map(({ value, label, sub }) => (
+								<label key={value} className="relative cursor-pointer">
+									<input type="radio" value={value} {...register("charging_speed")} className="sr-only peer" />
+									<div className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 peer-checked:border-green-500 peer-checked:bg-green-50 dark:peer-checked:bg-green-950/30 transition-all text-center hover:border-gray-300 dark:hover:border-gray-600">
+										<span className="text-lg">{label.split(" ")[0]}</span>
+										<span className="text-xs font-medium text-gray-700 dark:text-gray-300">{label.split(" ").slice(1).join(" ")}</span>
+										<span className="text-xs text-gray-400">{sub}</span>
+									</div>
+								</label>
+							))}
+						</div>
+					</div>
+
+					<div>
+						<p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Battery</p>
 						<div className="grid grid-cols-3 gap-4">
 							<div>
-								<label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-									Start %
-								</label>
+								<label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Start %</label>
 								<input
 									type="number"
 									{...register("start_percent", {
@@ -199,14 +210,10 @@ export default function EditSessionClient({
 									placeholder="e.g. 20"
 									className={inputClass}
 								/>
-								{errors.start_percent && (
-									<p className={errorClass}>{errors.start_percent.message}</p>
-								)}
+								{errors.start_percent && <p className={errorClass}>{errors.start_percent.message}</p>}
 							</div>
 							<div>
-								<label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-									End %
-								</label>
+								<label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">End %</label>
 								<input
 									type="number"
 									{...register("end_percent", {
@@ -216,14 +223,10 @@ export default function EditSessionClient({
 									placeholder="e.g. 80"
 									className={inputClass}
 								/>
-								{errors.end_percent && (
-									<p className={errorClass}>{errors.end_percent.message}</p>
-								)}
+								{errors.end_percent && <p className={errorClass}>{errors.end_percent.message}</p>}
 							</div>
 							<div>
-								<label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-									Total Energy (kWh) *
-								</label>
+								<label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total Energy (kWh) *</label>
 								<input
 									type="number"
 									step="0.01"
@@ -234,85 +237,54 @@ export default function EditSessionClient({
 									placeholder="e.g. 40.23"
 									className={inputClass}
 								/>
-								{errors.kwh_added && (
-									<p className={errorClass}>{errors.kwh_added.message}</p>
-								)}
+								{errors.kwh_added && <p className={errorClass}>{errors.kwh_added.message}</p>}
 							</div>
 						</div>
 					</div>
 
 					<div className="grid grid-cols-2 gap-4">
 						<div>
-							<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-								Odometer (km)
-							</label>
-							<input
-								type="number"
-								{...register("odometer")}
-								placeholder="e.g. 12350"
-								className={inputClass}
-							/>
+							<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Odometer (km)</label>
+							<input type="number" {...register("odometer")} placeholder="e.g. 12350" className={inputClass} />
 						</div>
 						<div>
-							<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-								Duration (mins)
-							</label>
-							<input
-								type="number"
-								{...register("duration_minutes")}
-								placeholder="e.g. 45"
-								className={inputClass}
-							/>
+							<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration (mins)</label>
+							<input type="number" {...register("duration_minutes")} placeholder="e.g. 45" className={inputClass} />
 						</div>
 					</div>
 
 					<div>
 						<p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-							Cost{" "}
-							<span className="text-gray-400 font-normal">
-								(fill one, the other auto-calculates)
-							</span>
+							Cost <span className="text-gray-400 font-normal">(fill one, the other auto-calculates)</span>
 						</p>
 						<div className="grid grid-cols-2 gap-4">
 							<div>
-								<label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-									Total cost ($)
-								</label>
+								<label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Total cost ($)</label>
 								<input
 									type="number"
 									step="0.01"
-									{...register("cost", {
-										min: { value: 0, message: "Must be positive" },
-									})}
+									{...register("cost", { min: { value: 0, message: "Must be positive" } })}
 									placeholder="e.g. 12.50"
 									className={inputClass}
 								/>
 								{errors.cost && <p className={errorClass}>{errors.cost.message}</p>}
 							</div>
 							<div>
-								<label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-									Rate ($/kWh)
-								</label>
+								<label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Rate ($/kWh)</label>
 								<input
 									type="number"
 									step="0.001"
-									{...register("rate_per_kwh", {
-										min: { value: 0, message: "Must be positive" },
-									})}
+									{...register("rate_per_kwh", { min: { value: 0, message: "Must be positive" } })}
 									placeholder="e.g. 0.30"
 									className={inputClass}
 								/>
-								{errors.rate_per_kwh && (
-									<p className={errorClass}>{errors.rate_per_kwh.message}</p>
-								)}
+								{errors.rate_per_kwh && <p className={errorClass}>{errors.rate_per_kwh.message}</p>}
 							</div>
 						</div>
 					</div>
 
 					<div>
-						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-							Notes
-						</label>
+						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
 						<textarea
 							{...register("notes")}
 							placeholder="e.g. Cold weather, busy station..."
@@ -333,7 +305,7 @@ export default function EditSessionClient({
 						<button
 							type="submit"
 							disabled={submitting}
-							className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-6 py-2 rounded-lg transition disabled:opacity-50"
+							className="bg-green-600 hover:bg-green-700 active:scale-95 text-white text-sm font-medium px-6 py-2 rounded-lg transition disabled:opacity-50"
 						>
 							{submitting ? "Saving..." : "Save changes"}
 						</button>

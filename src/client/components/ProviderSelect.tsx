@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { DEFAULT_PROVIDERS } from "@/src/types";
-
 interface Props {
 	value: string;
 	onChange: (value: string) => void;
@@ -14,7 +12,7 @@ export default function ProviderSelect({ value, onChange, className }: Props) {
 	const [showCustomInput, setShowCustomInput] = useState(false);
 	const [customInput, setCustomInput] = useState("");
 
-	const allProviders = [...DEFAULT_PROVIDERS, ...customProviders];
+	const allProviders = [...customProviders];
 
 	function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
 		if (e.target.value === "__add_new__") {

@@ -33,6 +33,7 @@ export interface CreateSessionPayload {
 	odometer: number | null;
 	cost: number | null;
 	rate_per_kwh: number | null;
+	charging_speed: ChargingSpeed | null;
 	notes: string | null;
 }
 

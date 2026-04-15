@@ -38,10 +38,10 @@ export async function createSession(
 	if (finalRate && payload.kwh_added && !finalCost)
 		finalCost = finalRate * payload.kwh_added;
 
-	const charging_speed = calculateChargingSpeed(
-		payload.kwh_added,
-		payload.duration_minutes,
-	);
+	// prefer manual selection; fall back to auto-calculation
+	const charging_speed =
+		payload.charging_speed ??
+		calculateChargingSpeed(payload.kwh_added, payload.duration_minutes);
 
 	return dbCreateSession(userId, {
 		...payload,
@@ -208,6 +208,7 @@ export function parseCsv(csvText: string): CreateSessionPayload[] {
 				return {
 					date: formatDate(get(values, "date")),
 					provider: get(values, "charger") || null,
+					charging_speed: null,
 					start_percent: toNum(get(values, "initial")),
 					end_percent: toNum(get(values, "finish")),
 					kwh_added: kwh,
@@ -219,9 +220,12 @@ export function parseCsv(csvText: string): CreateSessionPayload[] {
 				};
 			}
 
+			const rawSpeed = get(values, "charging speed") || get(values, "speed");
+			const speed = (["slow","regular","fast"].includes(rawSpeed) ? rawSpeed : null) as ChargingSpeed | null;
 			return {
 				date: formatDate(get(values, "date")),
 				provider: get(values, "provider") || null,
+				charging_speed: speed,
 				start_percent: toNum(get(values, "start")),
 				end_percent: toNum(get(values, "end")),
 				kwh_added: toNum(get(values, "kwh")) ?? 0,
@@ -248,10 +252,9 @@ export async function updateSession(
 	if (finalRate && payload.kwh_added && !finalCost)
 		finalCost = finalRate * payload.kwh_added;
 
-	const charging_speed = calculateChargingSpeed(
-		payload.kwh_added,
-		payload.duration_minutes,
-	);
+	const charging_speed =
+		payload.charging_speed ??
+		calculateChargingSpeed(payload.kwh_added, payload.duration_minutes);
 
 	return dbUpdateSession(userId, id, {
 		...payload,

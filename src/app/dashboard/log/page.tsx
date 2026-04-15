@@ -12,6 +12,7 @@ import { CreateSessionPayload } from "@/src/types";
 type FormValues = {
 	date: string;
 	provider: string;
+	charging_speed: string;
 	start_percent: string;
 	end_percent: string;
 	kwh_added: string;
@@ -67,6 +68,7 @@ export default function LogSessionPage() {
 		const payload: CreateSessionPayload = {
 			date: values.date,
 			provider: values.provider || null,
+			charging_speed: (values.charging_speed as import("@/src/types").ChargingSpeed) || null,
 			start_percent: values.start_percent
 				? parseFloat(values.start_percent)
 				: null,
@@ -97,20 +99,14 @@ export default function LogSessionPage() {
 	const errorClass = "text-red-500 text-xs mt-1";
 
 	return (
-		<div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-			<nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center gap-4">
-				<Link
-					href="/dashboard"
-					className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm"
-				>
-					← Back
-				</Link>
-				<h1 className="text-xl font-bold text-gray-900 dark:text-white">
-					Log charging session
-				</h1>
-			</nav>
-
+		<div>
 			<main className="max-w-2xl mx-auto px-4 py-8">
+				<div className="mb-6 animate-fade-in">
+					<Link href="/dashboard" className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">
+						← Back to dashboard
+					</Link>
+					<h2 className="text-xl font-bold text-gray-900 dark:text-white mt-2">Log session</h2>
+				</div>
 				<form
 					onSubmit={handleSubmit(onSubmit)}
 					className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 space-y-6"
@@ -172,6 +168,35 @@ export default function LogSessionPage() {
 									</button>
 								</div>
 							)}
+						</div>
+					</div>
+
+					{/* charging speed */}
+					<div>
+						<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+							Charging speed
+						</label>
+						<div className="grid grid-cols-3 gap-3">
+							{[
+								{ value: "slow",    label: "🐢 Slow",    sub: "AC / Level 1-2" },
+								{ value: "regular", label: "⚡ Regular", sub: "AC / Level 2" },
+								{ value: "fast",    label: "🚀 Fast",    sub: "DC fast charge" },
+							].map(({ value, label, sub }) => {
+								const reg = register("charging_speed");
+								return (
+									<label
+										key={value}
+										className="relative cursor-pointer"
+									>
+										<input type="radio" value={value} {...reg} className="sr-only peer" />
+										<div className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 peer-checked:border-green-500 peer-checked:bg-green-50 dark:peer-checked:bg-green-950/30 transition-all text-center hover:border-gray-300 dark:hover:border-gray-600">
+											<span className="text-lg">{label.split(" ")[0]}</span>
+											<span className="text-xs font-medium text-gray-700 dark:text-gray-300">{label.split(" ").slice(1).join(" ")}</span>
+											<span className="text-xs text-gray-400">{sub}</span>
+										</div>
+									</label>
+								);
+							})}
 						</div>
 					</div>
 
