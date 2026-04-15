@@ -43,3 +43,21 @@ export async function dbDeleteSession(
 
 	if (error) throw new Error(error.message);
 }
+
+export async function dbUpdateSession(
+	userId: string,
+	id: string,
+	payload: Partial<CreateSessionPayload> & { charging_speed?: string | null },
+): Promise<ChargingSession> {
+	const supabase = await createClient();
+	const { data, error } = await supabase
+		.from("charging_sessions")
+		.update(payload)
+		.eq("id", id)
+		.eq("user_id", userId)
+		.select()
+		.single();
+
+	if (error) throw new Error(error.message);
+	return data;
+}

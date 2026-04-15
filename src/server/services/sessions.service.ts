@@ -2,6 +2,7 @@ import {
 	dbGetSessions,
 	dbCreateSession,
 	dbDeleteSession,
+	dbUpdateSession,
 } from "@/src/server/db/sessions.db";
 import {
 	CreateSessionPayload,
@@ -133,26 +134,51 @@ export function generateCsv(sessions: ChargingSession[]): string {
 
 	return [headers, ...rows].join("\n");
 }
-
 export function parseCsv(csvText: string): CreateSessionPayload[] {
-	const lines = csvText.trim().split("\n");
+	// properly parse CSV respecting quoted fields with newlines inside
+	const rows: string[][] = [];
+	let current = "";
+	let inQuotes = false;
 
-	const rawHeaders = lines[0]
-		.split(",")
-		.map((h) =>
-			h
-				.replace(/^"|"$/g, "")
-				.replace(/\r/g, "")
-				.replace(/\n/g, " ")
-				.trim()
-				.toLowerCase(),
+	for (let i = 0; i < csvText.length; i++) {
+		const ch = csvText[i];
+		if (ch === '"') {
+			inQuotes = !inQuotes;
+		} else if (
+			(ch === "\n" || (ch === "\r" && csvText[i + 1] === "\n")) &&
+			!inQuotes
+		) {
+			if (ch === "\r") i++;
+			if (current.trim()) {
+				rows.push(
+					current
+						.split(",")
+						.map((v) => v.replace(/^"|"$/g, "").replace(/\n/g, " ").trim()),
+				);
+			}
+			current = "";
+		} else {
+			current += ch;
+		}
+	}
+	if (current.trim()) {
+		rows.push(
+			current
+				.split(",")
+				.map((v) => v.replace(/^"|"$/g, "").replace(/\n/g, " ").trim()),
 		);
+	}
+
+	if (rows.length < 2) return [];
+
+	const rawHeaders = rows[0].map((h) =>
+		h.toLowerCase().replace(/\s+/g, " ").trim(),
+	);
 
 	const get = (values: string[], header: string) => {
-		const index = rawHeaders.indexOf(header);
-		return index !== -1
-			? values[index]?.replace(/^"|"$/g, "").replace(/\r/g, "").trim()
-			: "";
+		const index = rawHeaders.findIndex((h) => h.includes(header));
+		if (index === -1 || values[index] == null) return "";
+		return values[index].replace(/^"|"$/g, "").replace(/\r/g, "").trim();
 	};
 
 	const toNum = (val: string) => {
@@ -169,42 +195,68 @@ export function parseCsv(csvText: string): CreateSessionPayload[] {
 		return val;
 	};
 
-	const isCustomFormat = rawHeaders.includes("total energy distributed (kwh)");
+	const isCustomFormat = rawHeaders.some((h) =>
+		h.includes("total energy distributed"),
+	);
 
-	return lines
+	return rows
 		.slice(1)
-		.map((line) => {
-			const values = line.match(/(".*?"|[^,]+|(?<=,)(?=,)|^(?=,)|(?<=,)$)/g) ?? [];
-
+		.map((values) => {
 			if (isCustomFormat) {
-				const duration = toNum(get(values, "duration\n  (mins)"));
-				const kwh = toNum(get(values, "total energy distributed (kwh)")) ?? 0;
+				const duration = toNum(get(values, "duration"));
+				const kwh = toNum(get(values, "total energy")) ?? 0;
 				return {
 					date: formatDate(get(values, "date")),
 					provider: get(values, "charger") || null,
-					start_percent: toNum(get(values, "initial\n  %")),
-					end_percent: toNum(get(values, "finish\n  %")),
+					start_percent: toNum(get(values, "initial")),
+					end_percent: toNum(get(values, "finish")),
 					kwh_added: kwh,
 					duration_minutes: duration,
-					odometer: toNum(get(values, "odometer\n (km)")),
-					cost: toNum(get(values, "ammount\n (aud$)")),
+					odometer: toNum(get(values, "odometer")),
+					cost: toNum(get(values, "ammount")),
 					rate_per_kwh: null,
 					notes: null,
 				};
 			}
 
 			return {
-				date: get(values, "date"),
+				date: formatDate(get(values, "date")),
 				provider: get(values, "provider") || null,
-				start_percent: toNum(get(values, "start %")),
-				end_percent: toNum(get(values, "end %")),
-				kwh_added: toNum(get(values, "kwh added")) ?? 0,
-				duration_minutes: toNum(get(values, "duration (mins)")),
-				odometer: toNum(get(values, "odometer (km)")),
-				cost: toNum(get(values, "cost ($)")),
-				rate_per_kwh: toNum(get(values, "rate ($/kwh)")),
+				start_percent: toNum(get(values, "start")),
+				end_percent: toNum(get(values, "end")),
+				kwh_added: toNum(get(values, "kwh")) ?? 0,
+				duration_minutes: toNum(get(values, "duration")),
+				odometer: toNum(get(values, "odometer")),
+				cost: toNum(get(values, "cost")),
+				rate_per_kwh: toNum(get(values, "rate")),
 				notes: get(values, "notes") || null,
 			};
 		})
 		.filter((s) => s.date && s.kwh_added > 0);
+}
+
+export async function updateSession(
+	userId: string,
+	id: string,
+	payload: CreateSessionPayload,
+): Promise<ChargingSession> {
+	let finalRate = payload.rate_per_kwh;
+	let finalCost = payload.cost;
+
+	if (finalCost && payload.kwh_added && !finalRate)
+		finalRate = finalCost / payload.kwh_added;
+	if (finalRate && payload.kwh_added && !finalCost)
+		finalCost = finalRate * payload.kwh_added;
+
+	const charging_speed = calculateChargingSpeed(
+		payload.kwh_added,
+		payload.duration_minutes,
+	);
+
+	return dbUpdateSession(userId, id, {
+		...payload,
+		rate_per_kwh: finalRate,
+		cost: finalCost,
+		charging_speed,
+	});
 }

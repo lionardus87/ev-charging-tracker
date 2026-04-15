@@ -27,7 +27,10 @@ export async function POST(request: Request) {
 			);
 
 		const text = await file.text();
+		console.log("RAW CSV:", JSON.stringify(text.slice(0, 500)));
+
 		const sessions = parseCsv(text);
+		console.log("PARSED SESSIONS:", JSON.stringify(sessions));
 
 		if (!sessions.length) {
 			return NextResponse.json(

@@ -125,3 +125,15 @@ export function calculateStats(sessions: ChargingSession[]): SessionStats {
 		kmPerPercent,
 	};
 }
+
+export async function updateSession(
+	id: string,
+	payload: CreateSessionPayload,
+): Promise<ApiResponse<ChargingSession>> {
+	const res = await fetch(`/api/sessions/${id}`, {
+		method: "PATCH",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(payload),
+	});
+	return res.json();
+}

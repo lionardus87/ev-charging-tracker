@@ -183,6 +183,12 @@ export default function HistoryClient() {
 											</p>
 										)}
 									</div>
+									<Link
+										href={`/dashboard/history/${session.id}/edit`}
+										className="text-gray-300 dark:text-gray-600 hover:text-blue-500 transition text-sm leading-none mt-0.5"
+									>
+										✏️
+									</Link>
 									<button
 										onClick={() => handleDelete(session.id)}
 										className="text-gray-300 dark:text-gray-600 hover:text-red-500 transition text-lg leading-none mt-0.5"
